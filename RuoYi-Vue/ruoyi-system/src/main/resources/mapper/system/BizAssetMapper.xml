@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.BizAssetMapper">
+
+    <resultMap type="com.ruoyi.system.domain.BizAsset" id="BizAssetResult">
+        <id     property="assetId"   column="asset_id"   />
+        <result property="assetNo"   column="asset_no"   />
+        <result property="assetName" column="asset_name" />
+        <result property="deptId"    column="dept_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="status"    column="status"     />
+        <result property="stock"     column="stock"      />
+    </resultMap>
+
+    <sql id="selectAssetVo">
+        select asset_id, asset_no, asset_name, dept_id, user_id, status, stock from biz_asset
+    </sql>
+
+    <select id="selectAssetList" parameterType="com.ruoyi.system.domain.BizAsset" resultMap="BizAssetResult">
+        select a.asset_id, a.asset_no, a.asset_name, a.dept_id, a.user_id, a.status, a.stock
+        from biz_asset a
+        left join sys_dept d on a.dept_id = d.dept_id
+        where a.status != '2'
+        <if test="assetName != null and assetName != ''">
+            AND a.asset_name like concat('%', #{assetName}, '%')
+        </if>
+        <if test="status != null and status != ''">
+            AND a.status = #{status}
+        </if>
+        <!-- 数据范围过滤 -->
+        ${params.dataScope}
+    </select>
+
+    <select id="selectAssetById" parameterType="Long" resultMap="BizAssetResult">
+        <include refid="selectAssetVo"/>
+        where asset_id = #{assetId}
+    </select>
+
+    <select id="selectRecentClaims" parameterType="Integer" resultMap="BizAssetResult">
+        select asset_id, asset_no, asset_name, dept_id, user_id, status, stock
+        from biz_asset
+        where status = '1'
+        order by asset_id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectAssetReport" parameterType="com.ruoyi.system.domain.BizReportView" resultType="java.util.HashMap">
+        select asset_id, asset_no, asset_name, dept_id, user_id, status, stock
+        from biz_asset
+        where dept_id = #{deptId}
+          and ( ${filterExpr} )
+        order by ${orderColumn}
+    </select>
+
+    <update id="updateAssetStock" parameterType="com.ruoyi.system.domain.BizAsset">
+        update biz_asset
+        <set>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+        </set>
+        where asset_id = #{assetId}
+    </update>
+
+    <insert id="insertAsset" parameterType="com.ruoyi.system.domain.BizAsset" useGeneratedKeys="true" keyProperty="assetId">
+        insert into biz_asset (asset_no, asset_name, dept_id, user_id, status, stock)
+        values (#{assetNo}, #{assetName}, #{deptId}, #{userId}, #{status}, #{stock})
+    </insert>
+</mapper>

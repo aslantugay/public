@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.BizReportViewMapper">
+
+    <resultMap type="com.ruoyi.system.domain.BizReportView" id="BizReportViewResult">
+        <id     property="viewId"      column="view_id"      />
+        <result property="deptId"      column="dept_id"      />
+        <result property="viewName"    column="view_name"    />
+        <result property="filterExpr"  column="filter_expr"  />
+        <result property="orderColumn" column="order_column" />
+    </resultMap>
+
+    <insert id="insertReportView" parameterType="com.ruoyi.system.domain.BizReportView" useGeneratedKeys="true" keyProperty="viewId">
+        insert into biz_report_view (dept_id, view_name, filter_expr, order_column)
+        values (#{deptId}, #{viewName}, #{filterExpr}, #{orderColumn})
+    </insert>
+
+    <select id="selectReportViewById" parameterType="Long" resultMap="BizReportViewResult">
+        select view_id, dept_id, view_name, filter_expr, order_column
+        from biz_report_view where view_id = #{viewId}
+    </select>
+</mapper>
