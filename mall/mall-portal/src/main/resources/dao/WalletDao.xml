@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.dao.WalletDao">
+
+    <resultMap id="WalletResult" type="com.macro.mall.portal.domain.MemberWallet">
+        <id column="id" property="id"/>
+        <result column="member_id" property="memberId"/>
+        <result column="balance" property="balance"/>
+        <result column="status" property="status"/>
+        <result column="note" property="note"/>
+    </resultMap>
+
+    <resultMap id="TxResult" type="com.macro.mall.portal.domain.WalletTransaction">
+        <id column="id" property="id"/>
+        <result column="wallet_id" property="walletId"/>
+        <result column="member_id" property="memberId"/>
+        <result column="amount" property="amount"/>
+        <result column="type" property="type"/>
+        <result column="biz_note" property="bizNote"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <resultMap id="CardResult" type="com.macro.mall.portal.domain.GiftCard">
+        <id column="id" property="id"/>
+        <result column="card_no" property="cardNo"/>
+        <result column="card_sign" property="cardSign"/>
+        <result column="amount" property="amount"/>
+        <result column="owner_member_id" property="ownerMemberId"/>
+        <result column="used" property="used"/>
+        <result column="label" property="label"/>
+    </resultMap>
+
+    <select id="selectWalletByMemberId" resultMap="WalletResult">
+        select * from biz_member_wallet where member_id = #{memberId}
+    </select>
+
+    <select id="selectWalletById" resultMap="WalletResult">
+        select * from biz_member_wallet where id = #{id}
+    </select>
+
+    <insert id="insertWallet" parameterType="com.macro.mall.portal.domain.MemberWallet" useGeneratedKeys="true" keyProperty="id">
+        insert into biz_member_wallet (member_id, balance, status, note)
+        values (#{memberId}, #{balance}, #{status}, #{note})
+    </insert>
+
+    <update id="updateBalance" parameterType="com.macro.mall.portal.domain.MemberWallet">
+        update biz_member_wallet set balance = #{balance} where id = #{id}
+    </update>
+
+    <update id="updateNote" parameterType="com.macro.mall.portal.domain.MemberWallet">
+        update biz_member_wallet set note = #{note} where id = #{id}
+    </update>
+
+    <insert id="insertTransaction" parameterType="com.macro.mall.portal.domain.WalletTransaction">
+        insert into biz_wallet_transaction (wallet_id, member_id, amount, type, biz_note, create_time)
+        values (#{walletId}, #{memberId}, #{amount}, #{type}, #{bizNote}, now())
+    </insert>
+
+    <select id="listStatement" parameterType="com.macro.mall.portal.domain.WalletStatementQuery" resultMap="TxResult">
+        select * from biz_wallet_transaction
+        where wallet_id = #{walletId}
+        <if test="type != null and type != ''">
+            and type = #{type}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and biz_note like '%${keyword}%'
+        </if>
+        order by ${orderBy}
+    </select>
+
+    <select id="recentFeed" resultMap="TxResult">
+        select * from biz_wallet_transaction order by id desc limit #{limit}
+    </select>
+
+    <select id="report" resultType="java.util.HashMap">
+        select type, count(*) as cnt, sum(amount) as total
+        from biz_wallet_transaction
+        where wallet_id = #{walletId}
+          and ( ${filter} )
+        group by type
+    </select>
+
+    <select id="selectCardByNo" resultMap="CardResult">
+        select * from biz_gift_card where card_no = #{cardNo}
+    </select>
+
+    <update id="updateCardUsed" parameterType="com.macro.mall.portal.domain.GiftCard">
+        update biz_gift_card set used = #{used}, owner_member_id = #{ownerMemberId} where id = #{id}
+    </update>
+</mapper>
