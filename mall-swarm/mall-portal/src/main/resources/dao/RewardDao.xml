@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.portal.reward.dao.RewardDao">
+
+    <resultMap id="WalletMap" type="com.macro.mall.portal.reward.domain.RewardWallet">
+        <id column="id" property="id"/>
+        <result column="member_id" property="memberId"/>
+        <result column="balance" property="balance"/>
+        <result column="status" property="status"/>
+        <result column="note" property="note"/>
+    </resultMap>
+    <resultMap id="TxnMap" type="com.macro.mall.portal.reward.domain.RewardTxn">
+        <id column="id" property="id"/>
+        <result column="wallet_id" property="walletId"/>
+        <result column="member_id" property="memberId"/>
+        <result column="amount" property="amount"/>
+        <result column="type" property="type"/>
+        <result column="biz_note" property="bizNote"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    <resultMap id="CouponMap" type="com.macro.mall.portal.reward.domain.RewardCoupon">
+        <id column="id" property="id"/>
+        <result column="code" property="code"/>
+        <result column="amount" property="amount"/>
+        <result column="used" property="used"/>
+        <result column="owner_member_id" property="ownerMemberId"/>
+    </resultMap>
+    <resultMap id="ShareMap" type="com.macro.mall.portal.reward.domain.RewardShare">
+        <id column="id" property="id"/>
+        <result column="doc_id" property="docId"/>
+        <result column="token" property="token"/>
+        <result column="owner_member_id" property="ownerMemberId"/>
+    </resultMap>
+    <resultMap id="DocMap" type="com.macro.mall.portal.reward.domain.RewardDoc">
+        <id column="id" property="id"/>
+        <result column="owner_member_id" property="ownerMemberId"/>
+        <result column="title" property="title"/>
+        <result column="storage_key" property="storageKey"/>
+        <result column="tag" property="tag"/>
+        <result column="notes" property="notes"/>
+    </resultMap>
+
+    <select id="selectWalletByMemberId" resultMap="WalletMap">
+        select * from reward_wallet where member_id = #{memberId}
+    </select>
+    <select id="selectWalletById" resultMap="WalletMap">
+        select * from reward_wallet where id = #{id}
+    </select>
+    <insert id="insertWallet" parameterType="com.macro.mall.portal.reward.domain.RewardWallet" useGeneratedKeys="true" keyProperty="id">
+        insert into reward_wallet (member_id, balance, status, note) values (#{memberId}, #{balance}, #{status}, #{note})
+    </insert>
+    <update id="updateBalance" parameterType="com.macro.mall.portal.reward.domain.RewardWallet">
+        update reward_wallet set balance = #{balance} where id = #{id}
+    </update>
+    <update id="updateNote" parameterType="com.macro.mall.portal.reward.domain.RewardWallet">
+        update reward_wallet set note = #{note} where id = #{id}
+    </update>
+
+    <insert id="insertTxn" parameterType="com.macro.mall.portal.reward.domain.RewardTxn">
+        insert into reward_txn (wallet_id, member_id, amount, type, biz_note, create_time)
+        values (#{walletId}, #{memberId}, #{amount}, #{type}, #{bizNote}, now())
+    </insert>
+
+    <select id="listStatement" resultMap="TxnMap">
+        select * from reward_txn
+        where wallet_id = #{walletId}
+        <if test="keyword != null and keyword != ''">
+            and biz_note like '%${keyword}%'
+        </if>
+        order by ${orderBy}
+    </select>
+
+    <select id="recentFeed" resultMap="TxnMap">
+        select * from reward_txn order by id desc limit #{limit}
+    </select>
+
+    <select id="report" resultType="java.util.HashMap">
+        select type, count(*) cnt, sum(amount) total from reward_txn
+        where wallet_id = #{walletId} and ( ${filter} )
+        group by type
+    </select>
+
+    <select id="selectCouponByCode" resultMap="CouponMap">
+        select * from reward_coupon where code = #{code}
+    </select>
+    <update id="updateCouponUsed" parameterType="com.macro.mall.portal.reward.domain.RewardCoupon">
+        update reward_coupon set used = #{used}, owner_member_id = #{ownerMemberId} where id = #{id}
+    </update>
+
+    <insert id="insertShare" parameterType="com.macro.mall.portal.reward.domain.RewardShare" useGeneratedKeys="true" keyProperty="id">
+        insert into reward_share (doc_id, token, owner_member_id) values (#{docId}, #{token}, #{ownerMemberId})
+    </insert>
+    <select id="selectShareByToken" resultMap="ShareMap">
+        select * from reward_share where token = #{token}
+    </select>
+    <select id="selectDocById" resultMap="DocMap">
+        select * from reward_doc where id = #{id}
+    </select>
+</mapper>
